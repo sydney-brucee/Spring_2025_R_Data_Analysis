@@ -1,0 +1,371 @@
+---
+title: "SEB QBIO310 HW7"
+output: html_notebook
+---
+
+1. The Poisson distribution has one parameter lambda. The expectation and the variance of a Poisson random variable are both lambda. We are going to consider three different method of moments estimators to estimate lambda: the sample mean (use the R command mean(x)),the “biased” variance (use the R command mean(x^2) – mean(x)^2), and the sample variance (use the R command var(x)).
+
+```{r}
+set.seed(123)
+library(ggplot2)
+
+# Fxn to calculate all three estimates
+calculate_estimates <- function(x) {
+  mean_est <- mean(x)
+  biased_var <- mean(x^2) - mean(x)^2
+  sample_var <- var(x)
+  return(c(mean_est, biased_var, sample_var))
+}
+```
+
+  a. Simulate 10 independent Poisson random variables each with lambda = 3. Compute the three different estimates for lambda. Independently repeat the previous simulation and computations 1,000 times. For each of the three estimators make a histogram of the 1,000 estimates and compute the expectation, the variance, and the mean squared error.
+
+```{r}
+# Simulation with n = 10
+cat("Part a: n = 10\n")
+results_10 <- matrix(nrow = 1000, ncol = 3)
+
+# Running sims
+for (i in 1:1000) {
+  x <- rpois(10, lambda = 3)
+  results_10[i,] <- calculate_estimates(x)
+}
+
+colnames(results_10) <- c("Mean", "Biased_Var", "Sample_Var")
+
+#Histograms
+par(mfrow = c(1, 3))
+hist(results_10[,1], main = "Sample Mean (n=10)", xlab = "Estimate", breaks = 30)
+hist(results_10[,2], main = "Biased Variance (n=10)", xlab = "Estimate", breaks = 30)
+hist(results_10[,3], main = "Sample Variance (n=10)", xlab = "Estimate", breaks = 30)
+
+# Calculate statistics
+expectations_10 <- colMeans(results_10)
+variances_10 <- apply(results_10, 2, var)
+mse_10 <- colMeans((results_10 - 3)^2)
+
+# Print results
+cat("Expectations:\n")
+print(expectations_10)
+cat("Variances:\n")
+print(variances_10)
+cat("Mean Squared Errors:\n")
+print(mse_10)
+```
+  b. Repeat part (a) but now each simulation has 100 independent Poisson random
+variables with lambda = 3
+```{r}
+# Part b: Simulation with n = 100
+cat("\nPart b: n = 100\n")
+
+# Matrix to store results
+results_100 <- matrix(nrow = 1000, ncol = 3)
+
+# Run simulations
+for(i in 1:1000) {
+  x <- rpois(100, lambda = 3)
+  results_100[i,] <- calculate_estimates(x)
+}
+
+# Name columns
+colnames(results_100) <- c("Mean", "Biased_Var", "Sample_Var")
+
+# Histograms
+par(mfrow = c(1, 3))
+hist(results_100[,1], main = "Sample Mean (n=100)", xlab = "Estimate", breaks = 30)
+hist(results_100[,2], main = "Biased Variance (n=100)", xlab = "Estimate", breaks = 30)
+hist(results_100[,3], main = "Sample Variance (n=100)", xlab = "Estimate", breaks = 30)
+
+# Calculating stats
+expectations_100 <- colMeans(results_100)
+variances_100 <- apply(results_100, 2, var)
+mse_100 <- colMeans((results_100 - 3)^2)
+
+# Print results
+cat("Expectations:\n")
+print(expectations_100)
+cat("Variances:\n")
+print(variances_100)
+cat("Mean Squared Errors:\n")
+print(mse_100)
+```
+  c. Repeat part (a) but now each simulation has 1,000 independent Poisson random variables with lambda = 3.
+```{r}
+# Part c: Simulation with n = 1000
+cat("\nPart c: n = 1000\n")
+
+# Matrix to store results
+results_1000 <- matrix(nrow = 1000, ncol = 3)
+
+# Run simulations
+for(i in 1:1000) {
+  x <- rpois(1000, lambda = 3)
+  results_1000[i,] <- calculate_estimates(x)
+}
+
+# Name columns
+colnames(results_1000) <- c("Mean", "Biased_Var", "Sample_Var")
+
+# Create histograms
+par(mfrow = c(1, 3))
+hist(results_1000[,1], main = "Sample Mean (n=1000)", xlab = "Estimate", breaks = 30)
+hist(results_1000[,2], main = "Biased Variance (n=1000)", xlab = "Estimate", breaks = 30)
+hist(results_1000[,3], main = "Sample Variance (n=1000)", xlab = "Estimate", breaks = 30)
+
+# Calculate statistics
+expectations_1000 <- colMeans(results_1000)
+variances_1000 <- apply(results_1000, 2, var)
+mse_1000 <- colMeans((results_1000 - 3)^2)
+
+# Print results
+cat("Expectations:\n")
+print(expectations_1000)
+cat("Variances:\n")
+print(variances_1000)
+cat("Mean Squared Errors:\n")
+print(mse_1000)
+```
+  d. Which (if any) of the estimators appear consistent? Which estimator appears to be the most efficient? Which (if any) of the estimators appear unbiased?
+    All three estimators are consistent as the sample size increases from n = 10 to n = 100 to n = 1000, their expectations approach the true value, lambda = 3, and the histograms become more concentrated around 3.
+    The sample mean is the most efficient because it has the smallest variance of all the sample sizes based off of their R.console numbers. This is also evident in the histograms where the sample mean has the tightest distribution.
+    The sample mean and sample variance are unbiased, with expectations very close to 3 at all samples sizes. The biased variance is biased at small sample sizes, but the bias decreases as n increases.
+  
+  
+2. In this problem we are going to again consider the Cleveland Heart data from last week.
+  a. Compute the difference of the mean MaxHR for men and the mean MaxHR for women.
+```{r}
+# Load the dataset
+clevheart = read.csv("ClevelandHeart.csv")
+
+# Check the column names
+colnames(clevheart)
+
+# Check the first few rows
+head(clevheart)
+
+# Check the unique values in the Sex column
+unique(clevheart$Sex)
+
+# Check for missing values in the Sex and MaxHR columns
+sum(is.na(clevheart$Sex))
+sum(is.na(clevheart$MaxHR))
+
+# Compute the mean MaxHR for men (Sex = 1) and women (Sex = 0)
+mean_maxhr_men = mean(clevheart$MaxHR[clevheart$Sex == "male"], na.rm = TRUE)
+mean_maxhr_women = mean(clevheart$MaxHR[clevheart$Sex == "female"], na.rm = TRUE)
+
+# Compute the difference: mean(MaxHR for men) - mean(MaxHR for women)
+diff_maxhr = mean_maxhr_men - mean_maxhr_women
+
+# Print the results
+cat("Mean MaxHR for men:", mean_maxhr_men, "\n")
+cat("Mean MaxHR for women:", mean_maxhr_women, "\n")
+cat("Difference (men - women):", diff_maxhr, "\n")
+```
+  
+  b. Write a function to compute the 95% bootstrap confidence interval for the difference of the means from part (a). Compute three different bootstrap confidence intervals: the normal, the percentile, and the pivotal (also called the basic). Comment on any similarities or differences between these three confidence intervals. Also, make a histogram of the difference of the means from the different bootstrap samples.
+```{r}
+# Function to compute bootstrap CIs for difference of means
+bootstrap_diff_ci <- function(data, B = 1000, alpha = 0.05) {
+  men_data = data$MaxHR[data$Sex == "male"]
+  women_data = data$MaxHR[data$Sex == "female"]
+  n_men = length(men_data)
+  n_women = length(women_data)
+  boot_diff = numeric(B)
+  
+  # Generate bootstrap samples
+  for(i in 1:B) {
+    boot_men = sample(men_data, n_men, replace = TRUE)
+    boot_women = sample(women_data, n_women, replace = TRUE)
+    boot_diff[i] = mean(boot_men, na.rm = TRUE) - mean(boot_women, na.rm = TRUE)
+  }
+  
+  # Observed difference
+  obs_diff = mean(men_data, na.rm = TRUE) - mean(women_data, na.rm = TRUE)
+  
+  # Normal CI
+  se = sd(boot_diff)
+  normal_ci = c(obs_diff - qnorm(1-alpha/2)*se, obs_diff + qnorm(1-alpha/2)*se)
+  
+  # Percentile CI
+  percentile_ci = quantile(boot_diff, c(alpha/2, 1-alpha/2))
+  
+  # Pivotal (Basic) CI
+  pivotal_ci = 2*obs_diff - quantile(boot_diff, c(1-alpha/2, alpha/2))
+  
+  # Histogram
+  hist(boot_diff, breaks = 30, main = "Bootstrap Distribution of Mean Difference",
+       xlab = "Difference in Means (Men - Women)", col = "purple")
+  abline(v = obs_diff, col = "green", lwd = 2)
+  
+  return(list(normal = normal_ci, percentile = percentile_ci, pivotal = pivotal_ci))
+}
+
+# Compute CIs
+set.seed(123)  # for reproducibility
+boot_results = bootstrap_diff_ci(clevheart)
+cat("Normal CI:", round(boot_results$normal, 3), "\n")
+cat("Percentile CI:", round(boot_results$percentile, 3), "\n")
+cat("Pivotal CI:", round(boot_results$pivotal, 3), "\n")
+```
+  
+  c. Write a function that uses the permutation test to test the null hypothesis that the two means are equal (use significance level lambda = 0.05). Compute the p-value and clearly state your conclusion. Also, make a histogram of the difference of the means (or, instead, the t-statistics) from the different permutations.
+```{r}
+# Function for permutation test
+perm_test_means <- function(data, B = 1000, alpha = 0.05) {
+  men_data = data$MaxHR[data$Sex == "male"]
+  women_data = data$MaxHR[data$Sex == "female"]
+  obs_diff = mean(men_data, na.rm = TRUE) - mean(women_data, na.rm = TRUE)
+  combined = c(men_data, women_data)
+  n_men = length(men_data)
+  n_women = length(women_data)
+  perm_diff = numeric(B)
+  
+  # Generate permutations
+  for(i in 1:B) {
+    perm_sample = sample(combined)  # shuffle all data
+    perm_men = perm_sample[1:n_men]
+    perm_women = perm_sample[(n_men+1):(n_men+n_women)]
+    perm_diff[i] = mean(perm_men, na.rm = TRUE) - mean(perm_women, na.rm = TRUE)
+  }
+  
+  # Two-sided p-value
+  p_value = mean(abs(perm_diff) >= abs(obs_diff))
+  
+  # Histogram
+  hist(perm_diff, breaks = 30, main = "Permutation Distribution of Mean Difference",
+       xlab = "Difference in Means (Men - Women)", col = "lightgreen")
+  abline(v = obs_diff, col = "red", lwd = 2)
+  
+  return(p_value)
+}
+
+# Run test
+set.seed(123)
+p_val_perm = perm_test_means(clevheart)
+cat("Permutation test p-value:", round(p_val_perm, 3), "\n")
+cat("Conclusion: ", ifelse(p_val_perm < 0.05, 
+                        "Reject H0: Evidence of difference in means",
+                        "Fail to reject H0: No evidence of difference in means"), "\n")
+```
+  
+  d. The R command t.test uses the Central Limit Theorem to compute the confidence interval and the p-value. Run this command and comment on any similarities or differences compared to the bootstrap confidence intervals and the permutation test p-value.
+```{r}
+# Run t.test
+t_test_result = t.test(MaxHR ~ Sex, data = clevheart, var.equal = FALSE)  # Welch's t-test
+print(t_test_result)
+
+# Extract CI and p-value
+cat("t.test CI:", round(t_test_result$conf.int, 3), "\n")
+cat("t.test p-value:", round(t_test_result$p.value, 3), "\n")
+```
+  
+  
+3. The attached data set “lawschools.csv” has data on average LSAT and average GPA for incoming law school students at 15 law schools (the two numbers on each row are for the same school). 
+  a. Make a scatter plot with LSAT on the x-axis and GPA on the y-axis and label the axes. Use the R command cor to compute the correlation between LSAT and GPA.
+```{r}
+# Assuming lawschool data is loaded with columns LSAT and GPA
+lawschool = read.csv("lawschools.csv")
+dim(lawschool)  # Should show 15 rows and 2 columns
+
+# Create scatter plot
+plot(lawschool$LSAT, lawschool$GPA, 
+     xlab = "Average LSAT Score", 
+     ylab = "Average GPA",
+     main = "Law School Admissions Data",
+     pch = 16)  # solid dots
+
+# Compute correlation
+cor_value = cor(lawschool$LSAT, lawschool$GPA)
+print(paste("Correlation coefficient:", round(cor_value, 3)))
+```
+ 
+  b. Write a function to compute the 95% confidence interval for the correlation between the LSAT and GPA numbers. Note: this data is paired and the Cleveland Heart data was unpaired, so this function should be different than your function from problem #2. Compute three different bootstrap confidence intervals: the normal, the percentile, and the pivotal (also called the basic). Comment on any similarities or differences between these three confidence intervals. Also, make a histogram of the correlation coefficients for the different bootstrap samples.
+```{r}
+# Function to compute bootstrap CIs for correlation
+bootstrap_cor_ci <- function(x, y, B = 1000, alpha = 0.05) {
+  n <- length(x)
+  boot_cor <- numeric(B)
+  
+  # Generate bootstrap samples
+  for(i in 1:B) {
+    indices <- sample(1:n, n, replace = TRUE)
+    boot_cor[i] <- cor(x[indices], y[indices])
+  }
+  
+  # Normal CI
+  se <- sd(boot_cor)
+  cor_est <- cor(x, y)
+  normal_ci <- c(cor_est - qnorm(1-alpha/2)*se, 
+                 cor_est + qnorm(1-alpha/2)*se)
+  
+  # Percentile CI
+  percentile_ci <- quantile(boot_cor, c(alpha/2, 1-alpha/2))
+  
+  # Pivotal (Basic) CI
+  pivotal_ci <- 2*cor_est - quantile(boot_cor, c(1-alpha/2, alpha/2))
+  
+  # Histogram
+  hist(boot_cor, breaks = 30, main = "Bootstrap Distribution of Correlation",
+       xlab = "Correlation Coefficient", col = "purple")
+  
+  return(list(normal = normal_ci, 
+              percentile = percentile_ci, 
+              pivotal = pivotal_ci,
+              boot_samples = boot_cor))
+}
+
+# Compute CIs
+set.seed(123)  # for reproducibility
+results <- bootstrap_cor_ci(lawschool$LSAT, lawschool$GPA)
+cat("Normal CI:", round(results$normal, 3), "\n")
+cat("Percentile CI:", round(results$percentile, 3), "\n")
+cat("Pivotal CI:", round(results$pivotal, 3), "\n")
+```
+  
+  c. Write a function that uses the permutation test to test the null hypothesis that the LSAT and GPA numbers are uncorrelated (use significance level alpha = 0.05). Again, because this data is paired, this function should be different than your function from problem #2. Compute the p-value and clearly state your conclusion. Also, make a histogram of the correlation coefficients for the different permutations.
+```{r}
+# Function for permutation test
+perm_test_cor <- function(x, y, B = 1000, alpha = 0.05) {
+  n <- length(x)
+  obs_cor <- cor(x, y)
+  perm_cor <- numeric(B)
+  
+  # Generate permutations
+  for(i in 1:B) {
+    perm_y <- sample(y)  # shuffle y values
+    perm_cor[i] <- cor(x, perm_y)
+  }
+  
+  # Two-sided p-value
+  p_value <- mean(abs(perm_cor) >= abs(obs_cor))
+  
+  # Histogram
+  hist(perm_cor, breaks = 30, main = "Permutation Distribution of Correlation",
+       xlab = "Correlation Coefficient", col = "lightgreen")
+  abline(v = obs_cor, col = "red", lwd = 2)
+  
+  return(p_value)
+}
+
+# Run test
+set.seed(123)
+p_val <- perm_test_cor(lawschool$LSAT, lawschool$GPA)
+cat("Permutation test p-value:", round(p_val, 3), "\n")
+cat("Conclusion: ", ifelse(p_val < 0.05, 
+                        "Reject H0: Evidence of correlation",
+                        "Fail to reject H0: No evidence of correlation"), "\n")
+```
+  
+  d. The R command cor.test uses the Central Limit Theorem to compute the confidence interval and the p-value. Run this command and comment on any similarities or differences compared to the bootstrap confidence intervals and the permutation test p-value.
+```{r}
+# Run cor.test
+test_result <- cor.test(lawschool$LSAT, lawschool$GPA)
+print(test_result)
+
+# Extract CI and p-value
+cat("cor.test CI:", round(test_result$conf.int, 3), "\n")
+cat("cor.test p-value:", round(test_result$p.value, 3), "\n")
+```
+  
+  

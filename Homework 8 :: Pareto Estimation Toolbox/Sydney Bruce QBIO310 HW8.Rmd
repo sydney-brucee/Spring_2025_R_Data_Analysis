@@ -1,0 +1,134 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+Download the file “hw8-pareto.csv” I have posted on Brightspace. For problem #1 we
+are just going to use the first column of this data set. The values in the first column are
+independent and identically distributed Pareto observations. We want to estimate the
+parameter a.
+  a. Make a histogram of the values in this column.
+```{r}
+# Loading the data
+data <- read.csv("hw8-pareto.csv")
+pareto1 <- data[[1]]
+n <- length(pareto1)
+
+# making a histogram
+hist(pareto1, breaks = 30, main = "Pareto Sample (Column 1)", xlab = "Values", col = "purple", border = "black")
+```
+  b. Compute the maximum likelihood estimator of a.
+```{r}
+# mle estimate of a
+logsum <- sum(log(pareto1))
+alpha_mle <- n / logsum
+alpha_mle
+```
+  c. Compute the Fisher information I(a). Use the maximum likelihood estimator and the Fisher     information to compute the 95% confidence interval for a.
+```{r}
+# Fisher info and confidence interval
+fisher_info <- n / (alpha_mle^2)
+std_error <- sqrt(1 / fisher_info)
+z_value <- qnorm(0.975)
+confint_wald <- c(alpha_mle - z_value * std_error, alpha_mle + z_value * std_error)
+confint_wald
+```
+  d. Compute the method of moments estimator of a.
+```{r}
+sample_mean <- mean(pareto1)
+alpha_mom <- sample_mean / (sample_mean - 1)
+alpha_mom
+```
+  e. Use the method of moments estimator and the bootstrap to compute the 95% pivotal confidence interval for a. Is the confidence interval you computed in part (c) pretty similar to the confidence interval you computed in part (e)? If not, explain why.
+```{r}
+set.seed(123)
+boot_estimates <- c()
+
+for (i in 1:1000) {
+  sample_boot <- sample(pareto1, n, replace = TRUE)
+  mean_boot <- mean(sample_boot)
+  alpha_boot <- mean_boot / (mean_boot - 1)
+  boot_estimates <- c(boot_estimates, alpha_boot)
+}
+confint_boot <- quantile(boot_estimates, c(0.025, 0.975))
+confint_boot
+```
+  f. Use the Wald test to test the null hypothesis that a = 3. Compute the p-value.
+```{r}
+z_test <- (alpha_mle - 3) / std_error
+pval_wald <- 2 * pnorm(-abs(z_test))
+pval_wald
+```
+  g. Use the Likelihood Ratio Test to test the null hypothesis that a = 3. Compute the pvalue.    Is the p-value you calculated in part (f) pretty sim
+```{r}
+loglik <- function(alpha, values) {
+  n <- length(values)
+  n * log(alpha) - alpha * sum(log(values))
+}
+loglik_mle <- loglik(alpha_mle, pareto1)
+loglik_null <- loglik(3, pareto1)
+
+lrt_stat <- 2 * (loglik_mle - loglik_null)
+pval_lrt <- pchisq(lrt_stat, df = 1, lower.tail = FALSE)
+pval_lrt
+```
+
+2. For problem #2 we are just going to use the second column of the data set. The values in the second column are also independent and identically distributed Pareto observations, but with a different value of a. We again want to estimate the parameter a.
+  Repeat parts (a) – (g) from problem #1 for the second column. In parts (f) and (g) the null     hypothesis is now a = 0.5.
+```{r}
+# Loading the data
+pareto2 <- data[[2]]
+n <- length(pareto2)
+
+# making a histogram
+hist(pareto2, breaks = 30, main = "Pareto Sample (Column 2)", xlab = "Values", col = "darkgreen", border = "black")
+```
+```{r}
+# mle estimate of a
+logsum <- sum(log(pareto2))
+alpha_mle <- n / logsum
+alpha_mle
+```
+```{r}
+# Fisher info and confidence interval
+fisher_info <- n / (alpha_mle^2)
+std_error <- sqrt(1 / fisher_info)
+z_value <- qnorm(0.975)
+confint_wald <- c(alpha_mle - z_value * std_error, alpha_mle + z_value * std_error)
+confint_wald
+```
+```{r}
+sample_mean <- mean(pareto2)
+alpha_mom <- sample_mean / (sample_mean - 1)
+alpha_mom
+```
+```{r}
+set.seed(123)
+boot_estimates <- c()
+
+for (i in 1:1000) {
+  sample_boot <- sample(pareto2, n, replace = TRUE)
+  mean_boot <- mean(sample_boot)
+  alpha_boot <- mean_boot / (mean_boot - 1)
+  boot_estimates <- c(boot_estimates, alpha_boot)
+}
+confint_boot <- quantile(boot_estimates, c(0.025, 0.975))
+confint_boot
+```
+```{r}
+z_test <- (alpha_mle - 0.5) / std_error
+pval_wald <- 2 * pnorm(-abs(z_test))
+pval_wald
+```
+```{r}
+loglik <- function(alpha, values) {
+  n <- length(values)
+  n * log(alpha) - alpha * sum(log(values))
+}
+loglik_mle <- loglik(alpha_mle, pareto2)
+loglik_null <- loglik(0.5, pareto2)
+
+lrt_stat <- 2 * (loglik_mle - loglik_null)
+pval_lrt <- pchisq(lrt_stat, df = 1, lower.tail = FALSE)
+pval_lrt
+```
+

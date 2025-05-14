@@ -1,0 +1,81 @@
+---
+title: "Sydney Bruce QBIO310 HW2 P2"
+output: html_notebook
+---
+
+Run is *Cmd+Shift+Enter*. 
+Insert chunk is *Cmd+Option+I*.
+
+2a. 
+  14% of men are color-blind. 
+    Calculate the probability that exactly 3 of 26 are color-blind
+    Needs binomial distribution
+    dbinom gives the exact probability of observing x successes in size trials with success probability prob
+```{r}
+dbinom(3,size=26,prob=.14)
+```
+
+    Calculate the probability that 3 or fewer of the 26 are color-blind
+    pbinom gives the cumulative probability of observing x or fewer successes
+```{r}
+pbinom(3,size=26,prob=.14)
+```
+
+    Calculate the probability that at least one of the 26 is color-blind
+    Finding P(X=0) then subtracting from 1 gives P(X>=1)
+```{r}
+1-pbinom(0,size=26,prob=.14)
+```
+
+
+2b.
+  Sports team has 60% chance of winning every game
+    Needs geometric distribution
+    Calculate the probability the team's first win is the third game of the season
+    use dgeom to return the probability that the first success occurs after x failures (on the x+1th trial)
+```{r}
+dgeom(2,0.6)
+```
+
+    Calculate the probability the team's first win is the third game of the season or earlier
+    use pgeom to return the cumulative probability that the first success occurs on or before the x+1th trial
+```{r}
+pgeom(2,0.6)
+```
+
+    Calculate the probability the team's first win is after the third game of the season
+    subtract pgeom of 2 from 1 to get P(X>2) and remember the iteration is really x+1th
+```{r}
+1-pgeom(2,0.6)
+```
+
+2c.
+  Assume babies' birth weights are normally distributed with a mean of 7.5lbs and a standard deviation of 1.1lbs.
+  need cumulative distribution function of a normal distribution
+    Calculate the probability that a randomly chosen baby weighs less than 7lbs.
+    Need to use pnorm to calculate the probability that a normally distributed random variable is less than or equal to a given value
+```{r}
+pnorm(7,mean=7.5,sd=1.1)
+```
+    
+    Calculate the probability that a randomly chosen baby weighs between 7 and 8lbs.
+```{r}
+pnorm(8,mean=7.5,sd=1.1)-pnorm(7,mean=7.5,sd=1.1)
+```
+    
+    Calculate the probability that a randomly chosen baby weighs more than 8 pounds.
+```{r}
+1-pnorm(8,mean=7.5,sd=1.1)
+```
+    
+2d.
+  Berkelium-248m has an exponential decay rate, lambda = 0.03/hours.
+    Caluclate the fraction that will have decayed within one hour.
+```{r}
+1-exp(-0.03*1)
+```
+    
+    Calculate the time in hours such that 50% will have decayed.
+```{r}
+log(2)/0.03
+```

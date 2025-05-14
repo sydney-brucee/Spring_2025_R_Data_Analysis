@@ -1,0 +1,137 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+1. Were any species found on all three islands? If so, which one(s). Are the number of males and females in the data set roughly balanced for each species? Note: the “table” command will be useful for this problem.
+```{r}
+# Packages
+#install.packages("tidyverse") # hash once used
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+
+# Loading the data
+penguins <- read.csv("penguins.csv")
+
+table(penguins$species, penguins$sex)
+```
+The Adelie and Chinstrap are perfectly balanced while the Gentoo is roughly balanced (3 off)
+
+2. Make a side-by-side boxplot comparing bill length for males and females. Do a t-test testing the null hypothesis that mean bill length is the same for males and females. What is your conclusion? Make a QQ-plot of bill length for males, make a separate QQ- plot of bill length for females. Are the t-test conditions satisfied? Also do the Wilcox- Mann-Whitney test. Do the t-test and Wilcox-Mann-Whitney test agree?
+```{r}
+# bill length males vs females
+ggplot(penguins, aes(x = sex, y = bill_length_mm)) + geom_boxplot() + labs(title = "Bill Length by Sex", x = "Sex", y = "Bill Length (mm)")
+
+# T-test
+t_test <- t.test(bill_length_mm ~ sex, data = penguins)
+print(t_test)
+
+# QQ plot
+qqnorm(penguins$bill_length_mm[penguins$sex == "male"], main = "QQ Plot: Males")
+qqline (penguins$bill_length_mm[penguins$sex == "male"])
+qqnorm(penguins$bill_length_mm[penguins$sex == "female"], main = "QQ Plot: Females")
+qqline(penguins$bill_length_mm[penguins$sex == "female"])
+
+# Wilcox-Mann-Whitney test
+wmw <- wilcox.test(bill_length_mm ~ sex, data = penguins)
+print(wmw)
+```
+Males have a statistically longer bill on average. Both tests strongly reject the null hypothesis at a = 0.05. The t-test assumptions are normal and robust with the Wilcoxon test confirming it. Overall, yes both the t-test and the WMW test led to the same conclusion of males having a confirmed larger beak size on average.
+
+3. Make a side-by-side boxplot comparing bill length for all three species. Do a one-way ANOVA to test the null hypothesis that all three specie have the same mean bill length. Show the ANOVA table. What is your conclusion? Make a QQ-plot of the residuals. Make a plot of the residuals vs. the group means. Are the ANOVA conditions satisfied?
+```{r}
+# Species' boxplots
+ggplot(penguins, aes(x = species, y = bill_length_mm)) + geom_boxplot() + labs(title = "Bill Length by Species", x = "Species", y = "Bill Length (mm)")
+
+# ANOVA
+anova_result <- aov(bill_length_mm ~ species, data = penguins)
+summary (anova_result)
+
+# Residuals
+residuals_anova <- residuals(anova_result)
+qqnorm(residuals_anova)
+qqline(residuals_anova)
+group_means <- tapply(penguins$bill_length_mm, penguins$species, mean, na.rm=TRUE)
+means_lookup <- setNames(group_means, names(group_means))
+group_mean_values <- means_lookup[as.character(penguins$species)]
+
+plot(group_mean_values, residuals(anova_result),
+     main = "Residuals vs Group Means", xlab = "Group Mean", ylab = "Residuals")
+```
+The ANOVA conditions appear to be satisfied because the QQ-plot of residuals shows that the points are approximately linear (normal) and the residuals vs group means plot doesnt have a clear pattern (homoscedasticity) confirming there is a significant difference in mean bill length among the three species.
+
+4. Make a side-by-side boxplot showing bill length as a function of both sex and species. Do a two-way ANOVA. Show the ANOVA table. For a two-way ANOVA there are three null hypotheses, what are your three conclusions? Make a QQ-plot of the residuals. Make a plot of the residuals vs. the group means. Are the ANOVA conditions satisfied?
+```{r}
+ggplot(penguins, aes(x = species, y = bill_length_mm, fill = sex)) + geom_boxplot(position = position_dodge(0.8)) + labs(title = "Bill Length by Sex and Species", x = "Species", y = "Bill Length (mm)")
+
+# 2-way ANOVA
+two_way <- aov(bill_length_mm ~ species * sex, data = penguins)
+summary(two_way)
+
+# Checking residuals
+residuals_two_way <- residuals(two_way)
+qqnorm(residuals_two_way)
+qqline(residuals_two_way)
+
+interaction_groups <- interaction(penguins$species, penguins$sex)
+group_means_2way <- tapply(penguins$bill_length_mm, interaction_groups, mean, na.rm=TRUE)
+means_lookup_2way <- setNames(group_means_2way, names(group_means_2way))
+group_mean_values_2way <- means_lookup_2way[as.character(interaction_groups)]
+
+plot(group_mean_values_2way, residuals(two_way),
+     main = "Residuals vs Group Means (Two-way ANOVA)", xlab = "Group Mean", ylab = "Residuals")
+```
+We tested if there was no difference in bill length among species, that was rejected as null due to p < 2e-16. We tested if there was no difference in bill length among sexes, that was rejected as null due to p < 2e-16. Then we tested if there was no interaction between species and sex, which we didn't reject as null because p = 0.103. The ANOVA conditions appear to be satisfied because the QQ-plot of residuals shows that the points are approximately linear (normal) and the residuals vs group means plot doesnt have a clear pattern (homoscedasticity) confirming there is a significant difference in mean bill length among the three species.
+
+5. Make a scatter plot with bill length on the x-axis and bill depth on the y-axis. Compute the correlation. Compute the least squares line, and add the least squares line to your plot. Is the slope (and the correlation) significantly different than zero? If so, does the sign of the slope (and correlation) surprise you? Make a QQ-plot of the residuals. Make a plot with bill length on the x-axis and the residuals on the y-axis. Are the linear model assumptions satisfied?
+```{r}
+# Scatter plot + LR for all species
+ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm)) + geom_point() + geom_smooth(method = "lm", se = FALSE) + labs(title = "Bill Length vs Bill Depth", x = "Bill Length (mm)", y = "Bill Depth (mm)")
+cor(penguins$bill_length_mm, penguins$bill_depth_mm, use = "complete.obs")
+lm_all <- lm(bill_depth_mm ~ bill_length_mm, data = penguins)
+summary (lm_all)
+
+# residuals
+residuals_lm <- residuals(lm_all)
+qqnorm(residuals_lm)
+qqline(residuals_lm)
+
+plot(penguins$bill_length_mm, residuals_lm, main = "Residuals vs Bill Length", xlab = "Bill Length (mm)", ylab = "Residuals")
+```
+We tested if the slope between bill length and bill depth was zero, which was rejected as null because the p-value was 2.53e-05. We also tested if the correlation was zero, and that was also rejected as null due to the same p-value. The negative sign of both the slope and the correlation was surprising, since we might expect longer bills to also be deeper. The linear model assumptions appear to be satisfied because the QQ-plot of residuals shows that the points are approximately linear (normal), and the residuals vs bill length plot does not show any strong curvature or spread (homoscedasticity). The color-coded plot by species helps explain the surprising negative slope, since different species have distinct bill shapes (e.g., Gentoo penguins have longer, shallower bills while Chinstrap have shorter, deeper ones), which creates a misleading negative trend across all species even if the trend within each species is positive.
+
+Next repeat everything in the previous paragraph, but just for the species Adelie.
+```{r}
+adelie <- filter(penguins, species == "Adelie")
+
+ggplot(adelie, aes(x = bill_length_mm, y = bill_depth_mm)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Adelie: Bill Length vs Bill Depth", x = "Bill Length", y = "Bill Depth")
+
+cor(adelie$bill_length_mm, adelie$bill_depth_mm, use = "complete.obs")
+
+lm_adelie <- lm(bill_depth_mm ~ bill_length_mm, data = adelie)
+summary(lm_adelie)
+
+residuals_adelie <- residuals(lm_adelie)
+qqnorm(residuals_adelie)
+qqline(residuals_adelie)
+
+plot(adelie$bill_length_mm, residuals_adelie,
+     main = "Adelie Residuals vs Bill Length", xlab = "Bill Length", ylab = "Residuals")
+```
+We tested if the slope between bill length and bill depth for Adelie penguins was zero, which we rejected as null because the p-value was 1.51e-06. We also tested if the correlation was zero, which was rejected as null since the correlation was 0.386 with a significant p-value. The positive slope and correlation are not surprising for this species, since it makes sense that longer bills would also be deeper. The linear model assumptions appear to be satisfied because the QQ-plot of residuals is approximately linear (normal), and the residuals vs bill length plot shows no strong patterns or fanning (homoscedasticity).
+
+
+Finally make another scatter plot with bill length on the x-axis and bill depth on the y- axis. This plot should include all three species, but the species should be color-coded (i.e., use one color for the Adelie penguins, a second color for the Chinstrap penguins,1 and a third color for the Gentoo penguins). Does this figure explain the surprising observation about the sign of the slopes?
+```{r}
+ggplot(penguins, aes(x = bill_length_mm, y = bill_depth_mm, color = species)) +
+  geom_point() +
+  labs(title = "Bill Dimensions by Species", x = "Bill Length", y = "Bill Depth")
+```
+Yes, this figure explains the surprising observation about the sign of the slopes. When looking at all species together, there is a negative correlation between bill length and bill depth. However, this is misleading because each species occupies a distinct region in the plot. For example, Gentoo penguins have longer but shallower bills, while Chinstrap penguins have shorter but deeper bills. Within each species, the trend is often positive, but when combined, the between-species differences create a negative overall slope. This is an example of Simpson’s paradox.
+
+6. What is the data set you have selected for your term paper? If you want, you are welcome to discuss with me your progress on the term paper before you turn it in. It is due the last day of classes on Friday, May 2.
+
+Drug_induced_Autoimmunity_Prediction from UCI
